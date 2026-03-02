@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPC Both UI</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { font-family:sans-serif; background:#f4f7f6; }
+.select-btns { display:flex; justify-content:center; gap:10px; margin:15px 0; }
+.container { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; }
+.card { border:2px solid #333; padding:10px; border-radius:5px; width:480px; }
+.disabled-ui { opacity:0.5; pointer-events:none; }
+.height-box { background:#d1ffdb; border:1px solid #28a745; text-align:center; }
+.height-line { display:flex; gap:5px; justify-content:center; margin-bottom:5px; align-items:center; }
+.height-line label{width:40px; text-align:right;}
+.height-line input, .height-line select { width:60px; text-align:center; }
+.mean-height-line { display:flex; gap:10px; justify-content:center; align-items:center; margin-bottom:10px; }
+.mean-height-line label{width:70px;text-align:right;}
+.mean-height-line input{width:80px;}
+.invalid-field { border:2px solid red !important; }
+.readonly-field { background:#e0e0e0; }
+.actions-container { display:flex; flex-direction:row; gap:10px; justify-content:center; margin-top:10px; }
+.locked-field { background:#e9ecef; cursor:not-allowed; }
+.width-mean { display:flex; gap:10px; align-items:center; justify-content:center; margin-bottom:10px;}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+input[type=number] { -moz-appearance:textfield; }
+</style>
+</head>
+<body>
+
+<!-- Navigation Buttons -->
+<div class="select-btns">
+  <button class="btn btn-primary" onclick="selectUI('old')">Old UI</button>
+  <button class="btn btn-primary" onclick="selectUI('new')">New UI</button>
+</div>
+
+<div class="container">
+
+<!-- OLD UI -->
+<div class="card" id="oldUI">
+<h4 class="text-secondary text-center">Old SPC UI</h4>
+
+<div class="row mb-2 justify-content-center g-2">
+  <div class="col-md-3"><label>Operator</label><input type="number" class="form-control next-field" id="o_operator"></div>
+  <div class="col-md-3"><label>Job No</label><input type="number" class="form-control next-field" id="o_job"></div>
+  <div class="col-md-3"><label>Part No</label>
+    <select id="o_part" class="form-control next-field" onchange="oSetRanges()">
+      <option value="">Select</option>
+      <option value="400">400</option>
+      <option value="383">383</option>
+      <option value="ex3">Ex3</option>
+      <option value="ex4">Ex4</option>
+      <option value="ex5">Ex5</option>
+    </select>
+  </div>
+</div>
+
+<div class="row mb-2 justify-content-center g-2">
+  <div class="col-md-3"><label>Batch</label><input type="text" class="form-control next-field" id="o_batch"></div>
+  <div class="col-md-3"><label>Machine</label>
+    <select id="o_machine" class="form-control next-field">
+      <option value="">Select</option><option>JCEMC1</option><option>JCEMC2</option>
+      <option>JCEMC3</option><option>JCEMC4</option><option>JCEMC5</option>
+    </select>
+  </div>
+  <div class="col-md-3"><label>Shift</label>
+    <select id="o_shift" class="form-control next-field">
+      <option value="">Select</option><option>A</option><option>B</option><option>C</option>
+      <option>Team 1</option><option>Team 2</option><option>Team 3</option><option>Team 4</option>
+    </select>
+  </div>
+</div>
+
+<div class="row mb-2 justify-content-center g-2">
+  <div class="col-md-3"><label>Sample No</label><input type="number" class="form-control readonly-field" value="1" readonly id="o_sample"></div>
+  <div class="col-md-4"><label>Date/Time</label><input type="text" class="form-control readonly-field" readonly id="o_datetime"></div>
+</div>
+
+<h5>Measurements</h5>
+<div id="o_measurements"></div>
+<div class="height-line">
+  <label>Width:</label><input type="number" id="o_width" class="height-box">
+</div>
+<div class="mean-height-line"><label>Mean H:</label><input type="text" id="o_mean" class="form-control readonly-field" readonly></div>
+
+<div class="actions-container">
+  <button class="btn btn-warning" onclick="oPrevious()">Previous</button>
+  <button class="btn btn-success" onclick="oSaveNext()">Save & Next</button>
+  <button class="btn btn-danger" onclick="exitApp()">Exit</button>
+</div>
+</div>
+
+<!-- NEW UI -->
+<div class="card disabled-ui" id="newUI">
+<h4 class="text-secondary text-center">New SPC UI</h4>
+
+<div class="row mb-2 justify-content-center g-2">
+  <div class="col-md-2"><label>Operator</label><input type="number" class="form-control next-field" id="n_operator"></div>
+  <div class="col-md-2"><label>Job No</label><input type="number" class="form-control next-field" id="n_job"></div>
+  <div class="col-md-2"><label>Part No</label>
+    <select id="n_part" class="form-control next-field" onchange="nUpdateRanges()">
+      <option value="">Select</option>
+      <option value="400">400</option>
+      <option value="383">383</option>
+      <option value="ex3">Ex3</option>
+      <option value="ex4">Ex4</option>
+      <option value="ex5">Ex5</option>
+    </select>
+  </div>
+</div>
+
+<div class="row mb-2 justify-content-center g-2">
+  <div class="col-md-2"><label>Batch</label><input type="text" class="form-control next-field" id="n_batch"></div>
+  <div class="col-md-2"><label>Machine</label>
+    <select id="n_machine" class="form-control next-field">
+      <option value="">Select</option><option>JCEMC1</option><option>JCEMC2</option>
+      <option>JCEMC3</option><option>JCEMC4</option><option>JCEMC5</option>
+    </select>
+  </div>
+  <div class="col-md-2"><label>Shift</label>
+    <select id="n_shift" class="form-control next-field">
+      <option value="">Select</option><option>A</option><option>B</option><option>C</option>
+      <option>Team 1</option><option>Team 2</option><option>Team 3</option><option>Team 4</option>
+    </select>
+  </div>
+</div>
+
+<div class="row mb-2 justify-content-center g-2">
+  <div class="col-md-2"><button class="btn btn-primary w-100" id="n_lockBtn" onclick="toggleLock()">🔒</button></div>
+</div>
+
+<div class="row mb-2 justify-content-center g-2">
+  <div class="col-md-2"><label>Sample No</label><input type="number" class="form-control readonly-field" value="1" readonly id="n_sample"></div>
+  <div class="col-md-3"><label>Date/Time</label><input type="text" class="form-control readonly-field" readonly id="n_datetime"></div>
+</div>
+
+<h5>Measurements</h5>
+<div id="n_measurements"></div>
+<div class="width-mean">
+  <label>Width:</label>
+  <select id="n_width"><option value="">Select</option></select>
+  <label>Mean H:</label>
+  <input type="text" class="form-control readonly-field" readonly id="n_mean">
+</div>
+
+<h5>Comments</h5>
+<textarea id="n_comment" class="form-control mb-2" rows="2" placeholder="Optional..."></textarea>
+
+<div class="actions-container">
+  <button class="btn btn-warning" onclick="nPrevious()">Previous</button>
+  <button class="btn btn-success" onclick="nSaveNext()">Save & Next</button>
+  <button class="btn btn-secondary" onclick="nReset()">Reset</button>
+  <button class="btn btn-danger" onclick="exitApp()">Exit</button>
+</div>
+</div>
+
+</div>
+
+<script>
+// Default Ranges
+const ranges = {
+  "383": {height:[0.400,0.415], width:[6.0,6.8]},
+  "400": {height:[0.395,0.410], width:[4.4,5.0]},
+  "ex3": {height:[0.200,0.207], width:[3.0,3.5]},
+  "ex4": {height:[0.300,0.305], width:[4.0,4.5]},
+  "ex5": {height:[0.500,0.510], width:[5.0,5.7]}
+};
+
+// UI Select
+function selectUI(which){
+  document.getElementById('oldUI').classList.toggle('disabled-ui', which!=='old');
+  document.getElementById('newUI').classList.toggle('disabled-ui', which!=='new');
+}
+
+// ----- Old UI -----
+let oSamples=[];
+function oSetRanges(){
+  let part=document.getElementById('o_part').value;
+  let container=document.getElementById('o_measurements'); container.innerHTML='';
+  if(!part) return; let r=ranges[part];
+  for(let s=1;s<=6;s+=3){
+    let line=document.createElement('div'); line.className='height-line';
+    for(let i=s;i<s+3;i++){
+      let l=document.createElement('label'); l.innerText=`H${i}:`;
+      let inp=document.createElement('input'); inp.type='number'; inp.className='height-box height-input';
+      inp.step=0.001; inp.dataset.min=r.height[0]; inp.dataset.max=r.height[1]; inp.oninput=oUpdateMean;
+      line.appendChild(l); line.appendChild(inp);
+    }
+    container.appendChild(line);
+  }
+  let w=document.getElementById('o_width'); w.min=r.width[0]; w.max=r.width[1]; w.value='';
+  oUpdateMean();
+}
+function oUpdateMean(){
+  let h=document.querySelectorAll('#o_measurements .height-input'); let total=0,count=0;
+  h.forEach(i=>{ let v=parseFloat(i.value); if(!isNaN(v)){total+=v; count++;} });
+  document.getElementById('o_mean').value=count>0?(total/count).toFixed(3):'';
+}
+function oSaveNext(){
+  let valid=true; ['o_operator','o_job','o_part','o_batch','o_machine','o_shift'].forEach(id=>{
+    let f=document.getElementById(id); if(!f.value){ f.classList.add('invalid-field'); valid=false;}else f.classList.remove('invalid-field');
+  });
+  let h=document.querySelectorAll('#o_measurements .height-input'); h.forEach(i=>{
+    let val=parseFloat(i.value), r=ranges[document.getElementById('o_part').value].height;
+    if(isNaN(val)||val<r[0]||val>r[1]){ i.classList.add('invalid-field'); valid=false;}else i.classList.remove('invalid-field');
+  });
+  let w=document.getElementById('o_width'); let wr=ranges[document.getElementById('o_part').value].width;
+  if(!w.value || w.value<wr[0] || w.value>wr[1]){ w.classList.add('invalid-field'); valid=false;}else w.classList.remove('invalid-field');
+  if(!valid){ alert("Fill valid values!"); return;}
+  let sample=parseInt(document.getElementById('o_sample').value); let dt=new Date().toLocaleString();
+  oSamples[sample-1]={ sample, dt, operator:document.getElementById('o_operator').value, job:document.getElementById('o_job').value, part:document.getElementById('o_part').value, batch:document.getElementById('o_batch').value, machine:document.getElementById('o_machine').value, shift:document.getElementById('o_shift').value, heights:Array.from(h).map(x=>x.value), width:w.value };
+  document.getElementById('o_datetime').value=dt; document.getElementById('o_sample').value=sample+1;
+  document.getElementById('o_operator').value=''; w.value=''; h.forEach(i=>i.value=''); document.getElementById('o_mean').value='';
+  alert(`Sample ${sample} saved!`);
+}
+function oPrevious(){
+  if(oSamples.length===0){ alert("No prev data"); return;}
+  let last=oSamples[oSamples.length-1]; document.getElementById('o_sample').value=last.sample;
+  document.getElementById('o_datetime').value=last.dt; document.getElementById('o_operator').value=last.operator;
+  document.getElementById('o_job').value=last.job; document.getElementById('o_part').value=last.part;
+  document.getElementById('o_batch').value=last.batch; document.getElementById('o_machine').value=last.machine;
+  document.getElementById('o_shift').value=last.shift; oSetRanges();
+  let h=document.querySelectorAll('#o_measurements .height-input'); h.forEach((i,j)=>i.value=last.heights[j]);
+  document.getElementById('o_width').value=last.width; oUpdateMean();
+}
+
+// ----- New UI -----
+let nSamples=[]; let nLocked=false;
+function nUpdateRanges(){
+  let part=document.getElementById('n_part').value; 
+  let c=document.getElementById('n_measurements'); c.innerHTML=''; 
+  if(!part) return;
+  let r=ranges[part]; 
+  for(let s=1;s<=6;s+=3){
+    let line=document.createElement('div'); line.className='height-line';
+    for(let i=s;i<s+3;i++){
+      let inp=document.createElement('select'); inp.className='height-box height-input'; inp.onchange=nCalculateMean;
+      let defaultOpt=document.createElement('option'); defaultOpt.text="Select"; defaultOpt.value=""; inp.appendChild(defaultOpt);
+      for(let val=r.height[0]; val<=r.height[1]+0.0001; val+=0.001){
+        let o=document.createElement('option'); o.value=o.text=val.toFixed(3); inp.appendChild(o);
+      }
+      let l=document.createElement('label'); l.innerText=`H${i}:`; line.appendChild(l); line.appendChild(inp);
+    }
+    c.appendChild(line);
+  }
+  let wsel=document.getElementById('n_width'); wsel.innerHTML=''; 
+  let defaultW=document.createElement('option'); defaultW.text="Select"; defaultW.value=""; wsel.appendChild(defaultW);
+  for(let val=r.width[0]; val<=r.width[1]+0.0001; val+=0.1){ let o=document.createElement('option'); o.value=o.text=val.toFixed(1); wsel.appendChild(o);}
+  nCalculateMean();
+}
+
+function nCalculateMean(){
+  let h=document.querySelectorAll('#n_measurements .height-input'); let total=0,count=0;
+  h.forEach(i=>{ let v=parseFloat(i.value); if(!isNaN(v)){total+=v; count++;} });
+  document.getElementById('n_mean').value=count>0?(total/count).toFixed(3):'';
+}
+
+function toggleLock(){ 
+  nLocked=!nLocked; 
+  ['n_operator','n_job','n_part','n_batch','n_machine','n_shift'].forEach(f=>document.getElementById(f).disabled=nLocked);
+  document.getElementById('n_lockBtn').innerText=nLocked?"🔓":"🔒";
+}
+
+function nSaveNext(){
+  let valid=true; ['n_operator','n_job','n_part','n_batch','n_machine','n_shift'].forEach(id=>{ let f=document.getElementById(id);
+  if(!f.value){ f.classList.add('invalid-field'); valid=false;}else f.classList.remove('invalid-field');});
+  let h=document.querySelectorAll('#n_measurements .height-input'); let r=ranges[document.getElementById('n_part').value];
+  h.forEach(i=>{ let val=parseFloat(i.value); if(isNaN(val)||val<r.height[0]||val>r.height[1]){ i.classList.add('invalid-field'); valid=false;}else i.classList.remove('invalid-field');});
+  let w=document.getElementById('n_width'); if(!w.value){ w.classList.add('invalid-field'); valid=false;}else w.classList.remove('invalid-field');
+  if(!valid){ alert("Fill valid values!"); return;}
+  let sample=parseInt(document.getElementById('n_sample').value); let dt=new Date().toLocaleString();
+  nSamples[sample-1]={ sample, dt, operator:document.getElementById('n_operator').value, job:document.getElementById('n_job').value, part:document.getElementById('n_part').value, batch:document.getElementById('n_batch').value, machine:document.getElementById('n_machine').value, shift:document.getElementById('n_shift').value, heights:Array.from(h).map(x=>x.value), width:w.value, comment:document.getElementById('n_comment').value };
+  document.getElementById('n_datetime').value=dt; document.getElementById('n_sample').value=sample+1;
+  h.forEach(i=>i.value=''); w.value=''; document.getElementById('n_mean').value=''; document.getElementById('n_comment').value='';
+  alert(`Sample ${sample} saved!`);
+}
+
+function nPrevious(){
+  if(nSamples.length===0){ alert("No prev data"); return;}
+  let last=nSamples[nSamples.length-1]; document.getElementById('n_sample').value=last.sample; document.getElementById('n_datetime').value=last.dt;
+  document.getElementById('n_operator').value=last.operator; document.getElementById('n_job').value=last.job; document.getElementById('n_part').value=last.part;
+  document.getElementById('n_batch').value=last.batch; document.getElementById('n_machine').value=last.machine; document.getElementById('n_shift').value=last.shift;
+  nUpdateRanges();
+  let h=document.querySelectorAll('#n_measurements .height-input'); h.forEach((i,j)=>i.value=last.heights[j]);
+  document.getElementById('n_width').value=last.width; document.getElementById('n_comment').value=last.comment;
+  nCalculateMean();
+}
+
+function nReset(){ 
+  ['n_operator','n_job','n_part','n_batch','n_machine','n_shift'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('n_measurements').innerHTML=''; 
+  document.getElementById('n_width').innerHTML=''; 
+  document.getElementById('n_mean').value=''; 
+  document.getElementById('n_comment').value=''; 
+  document.getElementById('n_sample').value=1; 
+  document.getElementById('n_datetime').value=''; 
+  if(nLocked) toggleLock();
+}
+
+function exitApp(){ alert("Exiting Demo"); }
+
+// Enter key to move next field
+document.addEventListener('keydown', function(e){
+  if(e.key==='Enter'){
+    let f = e.target;
+    let fields = Array.from(document.querySelectorAll('.next-field'));
+    let index = fields.indexOf(f);
+    if(index>-1){
+      e.preventDefault();
+      let next = fields[index+1];
+      if(next) next.focus();
+    }
+  }
+});
+
+// Default: show old
+selectUI('old');
+</script>
+</body>
+</html>
